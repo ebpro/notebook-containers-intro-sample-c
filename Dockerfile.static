@@ -1,0 +1,26 @@
+# =========================
+# Build stage (static musl toolchain)
+# =========================
+FROM docker.io/library/alpine:3.20 AS builder
+
+# Install C toolchain + musl headers for static linking
+RUN apk add --no-cache build-base musl-dev
+
+WORKDIR /src/app
+
+COPY helloworld.c .
+
+# Fully static binary
+RUN gcc -O2 -Wall -Wextra \
+    -static \
+    helloworld.c -o helloworld
+
+
+# =========================
+# Runtime stage (no libc, no shell)
+# =========================
+FROM gcr.io/distroless/static-debian12
+
+COPY --from=builder /src/app/helloworld /helloworld
+
+ENTRYPOINT ["/helloworld"]

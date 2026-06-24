@@ -1,0 +1,29 @@
+# =========================
+# Build stage
+# =========================
+FROM docker.io/library/gcc:13-bookworm AS builder
+
+WORKDIR /src/app
+
+# Copy source
+COPY helloworld.c .
+
+# Build the binary
+RUN gcc -Wall -Wextra -Werror -O2 \
+    -fPIE -pie \
+    -D_FORTIFY_SOURCE=2 \
+    helloworld.c -o helloworld
+
+
+# =========================
+# Runtime stage (distroless)
+# =========================
+FROM docker.io/library/gcr.io/distroless/base-debian12
+
+# Copy only the compiled binary
+COPY --from=builder /src/app/helloworld /helloworld
+
+# Run as non-root user (distroless provides this user)
+USER nonroot:nonroot
+
+ENTRYPOINT ["/helloworld"]

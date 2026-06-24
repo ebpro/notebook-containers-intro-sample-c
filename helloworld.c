@@ -1,23 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <unistd.h>
 
-#define MAX_NAME_LENGTH 50
+/*
+ * Simple container demo program
+ *
+ * Shows how a program running inside a container can access:
+ * - environment variables
+ * - container hostname
+ * - process information (PID, UID)
+ */
 
-int main(int argc, char* argv[]) {
-    // Check for correct argument count
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <firstname>\n", argv[0]);
-        return EXIT_FAILURE;
-    }
+int main(void)
+{
+    char hostname[256] = "unknown";
 
-    // Validate input length to prevent buffer overflow
-    if (strlen(argv[1]) > MAX_NAME_LENGTH) {
-        fprintf(stderr, "Error: Name too long (max %d characters)\n", MAX_NAME_LENGTH);
-        return EXIT_FAILURE;
-    }
+    if (gethostname(hostname, sizeof(hostname)) != 0)
+        perror("gethostname");
 
-    // Print greeting
-    printf("Hello %s!\n", argv[1]);
+    const char *name = getenv("NAME");
+
+    printf("Hostname : %s\n", hostname);
+    printf("PID      : %d\n", getpid());
+    printf("UID      : %d\n", getuid());
+    printf("Hello %s!\n", name ? name : "World");
+
     return EXIT_SUCCESS;
 }

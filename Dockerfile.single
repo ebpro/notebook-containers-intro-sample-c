@@ -1,0 +1,25 @@
+# Simple Dockerfile (single-stage build)
+
+FROM docker.io/library/gcc:13-bookworm
+
+WORKDIR /app
+
+# Copy the source code into the image
+COPY helloworld.c .
+
+# Compile the application
+RUN gcc -Wall -Wextra -Werror -O2 \
+    -fPIE -pie \
+    -D_FORTIFY_SOURCE=2 \
+    -static-libgcc \
+    helloworld.c -o helloworld
+
+# Create a non-root user
+RUN groupadd -r appuser && \
+    useradd -r -g appuser appuser
+
+# Run the application as a non-root user
+USER appuser
+
+CMD ["./helloworld"]
+

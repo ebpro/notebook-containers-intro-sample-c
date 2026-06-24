@@ -1,0 +1,38 @@
+# =========================
+# Build stage
+# =========================
+FROM docker.io/library/gcc:13-bookworm AS builder
+
+WORKDIR /src/app
+
+# Copy the source code
+COPY helloworld.c .
+
+# Compile the application
+RUN gcc -Wall -Wextra -Werror -O2 \
+    -fPIE -pie \
+    -D_FORTIFY_SOURCE=2 \
+    -static-libgcc \
+    helloworld.c -o helloworld
+
+
+# =========================
+# Runtime stage
+# =========================
+FROM docker.io/library/debian:bookworm-slim
+
+# Create a non-root user
+RUN groupadd -r appuser && \
+    useradd -r -g appuser appuser
+
+WORKDIR /app
+
+# Copy only the executable
+COPY --from=builder --chown=appuser:appuser \
+    /src/app/helloworld .
+
+# Run the application as a non-root user
+USER appuser
+
+ENTRYPOINT ["./helloworld"]
+
